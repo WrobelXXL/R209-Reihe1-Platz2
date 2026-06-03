@@ -41,10 +41,14 @@ def update_matrix():
     for row in range(8):
         byte_val = 0
         for col in range(8):
-            # Zeige Cursor immer wenn er aktiv ist (auch auf Punkten) - höhere Priorität
-            if cursor_visible and col == cursor_x and row == cursor_y:
-                byte_val |= (1 << (7 - col))
-            # Zeige gesetzte Punkte
+            is_cursor_pos = (col == cursor_x and row == cursor_y)
+
+            # Cursor hat Priorität: in der "aus"-Phase bleibt die Cursor-Position aus,
+            # auch wenn dort bereits ein Punkt gesetzt wurde.
+            if is_cursor_pos:
+                if cursor_visible:
+                    byte_val |= (1 << (7 - col))
+            # Gesetzte Punkte (außerhalb der Cursor-Position) immer anzeigen
             elif (col, row) in placed_dots:
                 byte_val |= (1 << (7 - col))
         write_max7219(row + 1, byte_val)
