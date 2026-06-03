@@ -17,8 +17,8 @@ MQTT_TOPIC = "R209/Reihe1/Platz2/display"
 # Spielfeld
 GRID_SIZE = 8
 START_INTERVAL = 0.8       # Startgeschwindigkeit (langsam)
-MIN_INTERVAL = 0.15        # Schnellste Geschwindigkeit
-SPEEDUP_PER_FOOD = 0.04    # Pro gefressenem Futter wird's schneller
+MIN_INTERVAL = 0.4        # Schnellste Geschwindigkeit
+SPEEDUP_PER_FOOD = 0.08    # Pro gefressenem Futter wird's schneller
 MARQUEE_ROTATE_90 = True   # True wenn Laufschrift auf deiner Matrix hoch/runter statt rechts/links läuft
 MARQUEE_DIGIT_EXTRA_ROTATE = 3  # Zusätzliche 90°-Drehungen nur für Laufschrift-Ziffern
 
@@ -537,6 +537,8 @@ def game_loop():
             head_x, head_y = snake[0]
             dx, dy = direction
             new_head = (head_x + dx, head_y + dy)
+            will_eat = (new_head == food)
+            body_for_collision = snake if will_eat else snake[:-1]
 
             # Wand-Kollision
             if not (0 <= new_head[0] < GRID_SIZE and 0 <= new_head[1] < GRID_SIZE):
@@ -545,14 +547,14 @@ def game_loop():
                 print(f"Game Over! Wand getroffen. Score: {score}")
                 update_matrix_unsafe = True
             # Selbst-Kollision
-            elif new_head in snake:
+            elif new_head in body_for_collision:
                 game_over = True
                 save_score(score)
                 print(f"Game Over! Selbst gebissen. Score: {score}")
                 update_matrix_unsafe = True
             else:
                 snake.insert(0, new_head)
-                if new_head == food:
+                if will_eat:
                     score += 1
                     # Geschwindigkeit erhöhen (Intervall verringern)
                     tick_interval = max(MIN_INTERVAL, tick_interval - SPEEDUP_PER_FOOD)
